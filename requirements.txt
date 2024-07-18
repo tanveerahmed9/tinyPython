@@ -1,0 +1,5 @@
+pyodbc
+azure-identity
+azure-keyvault-secrets
+azureml-core
+redis
