@@ -26,83 +26,88 @@ import re
 
 # --------------------------------------------------
 def get_args():
-    """Get command-line arguments"""
+       """Get command-line arguments"""
 
-    parser = argparse.ArgumentParser(
-        description='Create Howler Module',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+       parser = argparse.ArgumentParser(
+           description='Create Howler Module',
+           formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('positional',
-                        metavar='str',
-                        help='A positional argument')
+       parser.add_argument('-b',
+                           '--board',
+                           help='Initial Board State',
+                           metavar='board',
+                           type=str,
+                           default='.' * 9)
 
-    parser.add_argument('-b',
-                        '--board',
-                        help='Initial Board State',
-                        metavar='str',
-                        type=str,
-                        default='.' * 9)
+       parser.add_argument('-p',
+                           '--player',
+                           help='Player (X or O)',
+                           choices='XO',
+                           metavar='Player',
+                           type=str,
+                           default=None)
 
-    parser.add_argument('-p',
-                        '--player',
-                        help='A named integer argument',
-                        choices='XO',
-                        metavar='Player',
-                        type=str,
-                        default=None)
+       parser.add_argument('-c',
+                           '--cell',
+                           help='Cell (1-9)',
+                           metavar='cell',
+                           type=int,
+                           choices=range(1, 10),
+                           default=None)
 
-    parser.add_argument('-c',
-                        '--cell',
-                        help='Cell',
-                        metavar='str',
-                        default=None)
+       args = parser.parse_args()
 
-    parser.add_argument('-c',
-                        '--cell',
-                        help='cell value',
-                        action='store_true')
-    
+       if any([args.player, args.cell]) and not all([args.player, args.cell]):
+           parser.error("Must provide both player and cell or neither")
 
-    args = parser.parse_args()
-    if any ([args.player, args.cell] and not all([args.player,args.cell])): # condition to check the player and cell combination
-        parser.error("Must provide both player and Cell or None")
+       if not re.search('^[.XO]{9}$', args.board):
+           parser.error(f'--board "{args.board}" must be 9 characters of ., X, O')
 
-    if not re.search('^[.XO]{9}$',args.board): # regex to match the pattern when --boards in passed
-        parser.error(f'--board "{args.board}" must be character of 9 length and in ., X, O')
+       if args.cell and args.board[args.cell - 1] in 'XO':
+           parser.error(f'Cell "{args.cell}" already taken')
 
-    if args.player and args.cell and args.board[args.cell -1] in 'XO': # if the cell is already occupied
-        parser.error(f'--cell "{args.cell}" already Taken')
-
-
+       return args
 
 
 def format_board(board):
     """Format the playing board"""
+    cells = [str(i) if c == '.' else c for i, c in enumerate(board, 1)]
+    bar = '-------------'
+    cells_template = '| {} | {} | {} |'
+    board = '\n'.join([
+        bar,
+        cells_template.format(*cells[:3]),
+        bar,
+        cells_template.format(*cells[3:6]),
+        bar,
+        cells_template.format(*cells[6:]),
+        bar
+    ])
     return board
 
 def find_winner(board):
     """Determine the winner of the match based on board state , if no winner present return draw"""
-    pass
+    winning = ([0,1,2], [3,4,5], [6,7,8], [0,4,8], [1,4,7], [2,5,8])
+    for player in ['X', 'O']:
+        for i , j , k in winning:
+           combo = [board[i], board[j], board[k]] 
+           if combo == [player,player,player]:
+               return player 
 
 
 # --------------------------------------------------
 def main():
     """Make a jazz noise here"""
-
     args = get_args()
-    str_arg = args.arg
-    int_arg = args.int
-    file_arg = args.file
-    flag_arg = args.on
-    pos_arg = args.positional
+    board = list(args.board)
+    print(format_board(board))
 
-    print(f'str_arg = "{str_arg}"')
-    print(f'int_arg = "{int_arg}"')
-    print('file_arg = "{}"'.format(file_arg.name if file_arg else ''))
-    print(f'flag_arg = "{flag_arg}"')
-    print(f'positional = "{pos_arg}"')
+    if args.player and args.cell:
+        board[args.cell -1] = args.player
 
-
+    winner = find_winner(board)
+    print(f'{winner} has Won!' if winner else 'No Winner')
+    
 # --------------------------------------------------
 if __name__ == '__main__':
     main()
